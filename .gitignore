@@ -1,0 +1,18 @@
+# Local credentials and per-machine configuration
+**/.env
+**/.env.*
+!**/.env.example
+
+# Generated frontend assets and dependency caches
+**/node_modules/
+**/.next/
+**/*.tsbuildinfo
+**/coverage/
+**/test-results/
+**/playwright-report/
+
+# Local editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

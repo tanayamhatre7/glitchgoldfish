@@ -1,0 +1,269 @@
+{
+  "scope": {
+    "in_scope": [
+      "User authentication and role-based access control",
+      "Creation, modification, and deletion of test cases and suites",
+      "Manual and automated execution logging of test runs",
+      "Real-time dashboard showing pass/fail metrics and trends",
+      "RESTful API for CI/CD tool integrations"
+    ],
+    "out_of_scope": [
+      "In-browser containerized execution of selenium/playwright scripts",
+      "Physical mobile device cloud farming",
+      "Integration with legacy mainframes without API access"
+    ],
+    "assumptions": [
+      "Users have access to modern web browsers (Chrome, Safari, Firefox, Edge)",
+      "Automated runs will push data via standard HTTPS API requests",
+      "Initial usage will not exceed 100 concurrent write operations per second"
+    ],
+    "constraints": [
+      "Must comply with standard enterprise data privacy standards (GDPR/CCPA)",
+      "Must be deployed in a secure VPC with restricted public database access",
+      "Maximum budget for cloud resources during initial MVP is $150/month"
+    ]
+  },
+  "requirements": [
+    {
+      "requirement_id": "FR-001",
+      "type": "FUNCTIONAL",
+      "description": "The system must allow users to create, read, update, and delete Test Cases.",
+      "priority": "CRITICAL",
+      "status": "IDENTIFIED"
+    },
+    {
+      "requirement_id": "FR-002",
+      "type": "FUNCTIONAL",
+      "description": "The system must support organizing individual Test Cases into logical Test Suites.",
+      "priority": "HIGH",
+      "status": "IDENTIFIED"
+    },
+    {
+      "requirement_id": "FR-003",
+      "type": "FUNCTIONAL",
+      "description": "The system must provide an API endpoint to ingest automated execution results.",
+      "priority": "CRITICAL",
+      "status": "IDENTIFIED"
+    },
+    {
+      "requirement_id": "NFR-001",
+      "type": "NON_FUNCTIONAL",
+      "description": "All API endpoints for reporting execution metrics must respond in under 200 milliseconds.",
+      "priority": "HIGH",
+      "status": "IDENTIFIED"
+    }
+  ],
+  "user_roles": [
+    {
+      "role_id": "ROLE-001",
+      "name": "QA Engineer",
+      "description": "Creates and manages test cases, manually logs test executions, and analyzes results."
+    },
+    {
+      "role_id": "ROLE-002",
+      "name": "QA Lead",
+      "description": "Manages test suites, configures integrations, and views high-level quality reports."
+    }
+  ],
+  "features": [
+    {
+      "feature_id": "FEAT-001",
+      "name": "Test Case Registry",
+      "description": "A centralized repository containing structured test cases complete with preconditions, steps, and expected outcomes.",
+      "priority": "CRITICAL",
+      "requirement_ids": [
+        "FR-001"
+      ]
+    },
+    {
+      "feature_id": "FEAT-002",
+      "name": "Execution Run Engine",
+      "description": "A module to group tests, execute them, and store statuses (PASS, FAIL, BLOCKED, SKIPPED).",
+      "priority": "CRITICAL",
+      "requirement_ids": [
+        "FR-002",
+        "FR-003"
+      ]
+    }
+  ],
+  "user_stories": [
+    {
+      "user_story_id": "US-001",
+      "description": "As a QA Engineer, I want to write detailed test steps and expected outcomes, so that my team can reliably verify app behavior.",
+      "role_id": "ROLE-001",
+      "feature_id": "FEAT-001",
+      "requirement_ids": [
+        "FR-001"
+      ]
+    },
+    {
+      "user_story_id": "US-002",
+      "description": "As a QA Lead, I want to trigger and ingest the results of a test run from our Jenkins CI/CD pipeline so that release builds are automatically gated.",
+      "role_id": "ROLE-002",
+      "feature_id": "FEAT-002",
+      "requirement_ids": [
+        "FR-003",
+        "NFR-001"
+      ]
+    }
+  ],
+  "architecture": {
+    "architecture_id": "ARCH-001",
+    "style": "Clean Monolith (layered architecture)",
+    "reasoning": "A monolithic architecture is chosen to maximize delivery velocity, minimize operational overhead, and allow simple transaction boundary management for core models during early phases.",
+    "components": [
+      {
+        "component_id": "COMP-001",
+        "name": "Web UI Client",
+        "responsibility": "Renders user dashboard, test case builder, and test run tracking panels."
+      },
+      {
+        "component_id": "COMP-002",
+        "name": "API Service Gateway",
+        "responsibility": "Handles routing, rate limiting, and authenticates JWT tokens from client or API integrations."
+      },
+      {
+        "component_id": "COMP-003",
+        "name": "Core Application Service",
+        "responsibility": "Handles CRUD operations for suites/cases and business logic around execution state transitions."
+      }
+    ],
+    "relationships": [
+      "Web UI Client communicates with API Service Gateway via HTTPS JSON REST APIs.",
+      "API Service Gateway delegates request payload validation and processing to Core Application Service.",
+      "Core Application Service reads and writes directly to Database repository layers."
+    ],
+    "data_flow": [
+      "User saves new Test Case -> Web UI sends POST request to Gateway -> Gateway verifies token -> Core Service inserts record -> DB confirms -> Client updates UI state."
+    ]
+  },
+  "technology_stack": {
+    "technology_stack_id": "TECH-001",
+    "frontend": [
+      {
+        "technology": "React (TypeScript)",
+        "reason": "Provides structured, modular component hierarchy for fast responsive workflows."
+      },
+      {
+        "technology": "TailwindCSS",
+        "reason": "Accelerates UI development with utility-first classes and clean visual patterns."
+      }
+    ],
+    "backend": [
+      {
+        "technology": "Node.js (Express)",
+        "reason": "Offers lightweight, non-blocking asynchronous event handling ideal for API ingestion throughput."
+      }
+    ],
+    "database": [
+      {
+        "technology": "PostgreSQL",
+        "reason": "Strong ACID compliance guarantees relational consistency of test-to-run mappings and run state records."
+      }
+    ],
+    "infrastructure": [
+      {
+        "technology": "Docker",
+        "reason": "Ensures reproducible environmental setups for local development, staging, and production."
+      },
+      {
+        "technology": "AWS ECS Fargate",
+        "reason": "Enables serverless container executions eliminating underlying EC2 node maintenance tasks."
+      }
+    ]
+  },
+  "database_design": {
+    "database_design_id": "DB-001",
+    "database_type": "Relational",
+    "entities": [
+      {
+        "entity_id": "ENT-001",
+        "name": "TestCases",
+        "fields": [
+          "id: UUID (PK)",
+          "title: VARCHAR(255)",
+          "description: TEXT",
+          "steps: JSONB",
+          "created_by: UUID (FK)",
+          "created_at: TIMESTAMP"
+        ]
+      },
+      {
+        "entity_id": "ENT-002",
+        "name": "TestExecutions",
+        "fields": [
+          "id: UUID (PK)",
+          "test_case_id: UUID (FK)",
+          "status: VARCHAR(30)",
+          "logs: TEXT",
+          "executed_at: TIMESTAMP"
+        ]
+      }
+    ],
+    "relationships": [
+      "TestCases.id has a one-to-many relationship with TestExecutions.test_case_id (1:N)"
+    ]
+  },
+  "roadmap": {
+    "phases": [
+      {
+        "name": "Phase 1: Foundation & Core CRUD",
+        "duration": "4 weeks",
+        "description": "Establish basic application skeleton, setup relational schema, and finalize fundamental UI elements for test management.",
+        "milestones": [
+          "Database connection and baseline schema migration verified",
+          "Test Case creation UI and API routes fully completed"
+        ]
+      },
+      {
+        "name": "Phase 2: Executions & CI Integrations",
+        "duration": "3 weeks",
+        "description": "Deliver execution tracking system alongside secure developer API keys enabling headless triggers.",
+        "milestones": [
+          "Secure API Token emission module online",
+          "Successful execution import verified via Jenkins test script pipeline"
+        ]
+      }
+    ]
+  },
+  "api_design": [
+    {
+      "api_design_id": "API-001",
+      "method": "POST",
+      "endpoint": "/api/v1/test-cases",
+      "description": "Creates a new test case inside the registry database.",
+      "authentication": "JWT Token",
+      "request": {
+        "title": "Verify login screen validation errors",
+        "description": "Asserts standard errors appear upon entering invalid login credentials.",
+        "steps": [
+          "Navigate to /login",
+          "Type invalid values",
+          "Click Submit",
+          "Assert error message displays"
+        ]
+      },
+      "response": {
+        "id": "e2f09a5b-007a-4b0d-b89a-0e77d0cf9b3d",
+        "status": "success",
+        "created_at": "2023-10-24T12:00:00Z"
+      }
+    },
+    {
+      "api_design_id": "API-002",
+      "method": "POST",
+      "endpoint": "/api/v1/executions",
+      "description": "Pushes real-time execution outputs and system logs into the tracking ledger.",
+      "authentication": "Bearer Integration Token",
+      "request": {
+        "test_case_id": "e2f09a5b-007a-4b0d-b89a-0e77d0cf9b3d",
+        "status": "PASSED",
+        "logs": "Completed assertion check on element '#error-box' in 150ms."
+      },
+      "response": {
+        "execution_id": "8fa0865e-2b1b-4f51-b8ef-827a421684c9",
+        "status": "Logged Successfully"
+      }
+    }
+  ]
+}

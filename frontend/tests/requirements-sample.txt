@@ -1,0 +1,3 @@
+Browser verification fixture for Genesis.
+Build a booking portal where customers request appointments and administrators manage availability.
+Support secure sign-in and appointment status updates.

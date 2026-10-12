@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
@@ -59,7 +59,12 @@ Respond ONLY in valid JSON. Do not use markdown blocks. Your JSON must strictly 
       throw new Error("GEMINI_API_KEY is not set in .env.local");
     }
 
-    const modelsToTry = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-flash-latest"];
+    const modelsToTry = [
+      "gemini-3.5-flash",
+      "gemini-flash-lite-latest",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+    ];
     let geminiRes;
     let errorText = "";
 
@@ -68,38 +73,42 @@ Respond ONLY in valid JSON. Do not use markdown blocks. Your JSON must strictly 
       geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
-              responseMimeType: "application/json"
-            }
-          })
-        }
+              responseMimeType: "application/json",
+            },
+          }),
+        },
       );
 
       if (geminiRes.ok) {
         break; // Success! Exit the loop.
       } else {
         errorText = await geminiRes.text().catch(() => "");
-        console.warn(`Model ${model} failed with status ${geminiRes.status}: ${errorText}`);
+        console.warn(
+          `Model ${model} failed with status ${geminiRes.status}: ${errorText}`,
+        );
       }
     }
 
     if (!geminiRes || !geminiRes.ok) {
-      throw new Error(`All Gemini models failed. Last error status ${geminiRes?.status}: ${errorText}`);
+      throw new Error(
+        `All Gemini models failed. Last error status ${geminiRes?.status}: ${errorText}`,
+      );
     }
 
     const data = await geminiRes.json();
     const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!textOutput) {
       throw new Error("Invalid response format from Gemini");
     }
 
     console.log("Gemini response:", textOutput);
-    
+
     const parsed = JSON.parse(textOutput);
     return NextResponse.json(parsed);
   } catch (err: any) {
@@ -107,4 +116,3 @@ Respond ONLY in valid JSON. Do not use markdown blocks. Your JSON must strictly 
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-

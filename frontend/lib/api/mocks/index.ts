@@ -11,7 +11,11 @@ import {
 } from "@/types/genesis";
 import { ApiError, validate, validateFile } from "../client";
 import { sampleBlueprint, sampleProjects } from "./fixtures";
-type Store = { projects: Project[]; started: Record<string, number>; blueprints?: Record<string, Blueprint> };
+type Store = {
+  projects: Project[];
+  started: Record<string, number>;
+  blueprints?: Record<string, Blueprint>;
+};
 const key = "genesis-demo-v1";
 export function createMockApi(
   storage?: Pick<Storage, "getItem" | "setItem">,
@@ -33,7 +37,10 @@ export function createMockApi(
         })
         .parse(JSON.parse(persisted));
     } catch (err) {
-      console.warn("Corrupted demo storage detected. Resetting to default state...", err);
+      console.warn(
+        "Corrupted demo storage detected. Resetting to default state...",
+        err,
+      );
       storage?.removeItem(key);
       return memory;
     }
@@ -162,55 +169,66 @@ export function createMockApi(
       const project = find(store, id);
       if (project.status === "PROCESSING" || project.status === "ANALYZING")
         throw new ApiError("Analysis is already running.", 409);
-      
+
       project.status = "ANALYZING";
       store.started[id] = Date.now();
       save(store);
 
       // Trigger real LLM analysis via our new API route
-      fetch('/api/ollama', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project })
-      }).then(async res => {
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          throw new Error(errBody.error || "Gemini fetch failed");
-        }
-        return res.json();
-      }).then(ollamaData => {
-        const currentStore = read();
-        const p = find(currentStore, id);
-        
-        // Merge Gemini output with sample fixture to guarantee complete valid JSON
-        const baseBlueprint = sampleBlueprint(id);
-        if (ollamaData.scope) baseBlueprint.scope = ollamaData.scope;
-        if (ollamaData.requirements) {
-          baseBlueprint.requirements = ollamaData.requirements.map((req: any) => ({
-            ...req,
-            project_id: id
-          }));
-        }
-        if (ollamaData.user_roles) baseBlueprint.user_roles = ollamaData.user_roles;
-        if (ollamaData.features) baseBlueprint.features = ollamaData.features;
-        if (ollamaData.user_stories) baseBlueprint.user_stories = ollamaData.user_stories;
-        if (ollamaData.architecture) baseBlueprint.architecture = ollamaData.architecture;
-        if (ollamaData.technology_stack) baseBlueprint.technology_stack = ollamaData.technology_stack;
-        if (ollamaData.database_design) baseBlueprint.database_design = ollamaData.database_design;
-        if (ollamaData.api_design) baseBlueprint.api_design = ollamaData.api_design;
-        if (ollamaData.roadmap) baseBlueprint.roadmap = ollamaData.roadmap;
-        
-        currentStore.blueprints = currentStore.blueprints || {};
-        currentStore.blueprints[id] = baseBlueprint;
-        p.status = "COMPLETED";
-        save(currentStore);
-      }).catch(err => {
-        console.error("LLM Generation Error:", err);
-        const currentStore = read();
-        const p = find(currentStore, id);
-        p.status = "FAILED";
-        save(currentStore);
-      });
+      fetch("/api/ollama", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project }),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.error || "Gemini fetch failed");
+          }
+          return res.json();
+        })
+        .then((ollamaData) => {
+          const currentStore = read();
+          const p = find(currentStore, id);
+
+          // Merge Gemini output with sample fixture to guarantee complete valid JSON
+          const baseBlueprint = sampleBlueprint(id);
+          if (ollamaData.scope) baseBlueprint.scope = ollamaData.scope;
+          if (ollamaData.requirements) {
+            baseBlueprint.requirements = ollamaData.requirements.map(
+              (req: any) => ({
+                ...req,
+                project_id: id,
+              }),
+            );
+          }
+          if (ollamaData.user_roles)
+            baseBlueprint.user_roles = ollamaData.user_roles;
+          if (ollamaData.features) baseBlueprint.features = ollamaData.features;
+          if (ollamaData.user_stories)
+            baseBlueprint.user_stories = ollamaData.user_stories;
+          if (ollamaData.architecture)
+            baseBlueprint.architecture = ollamaData.architecture;
+          if (ollamaData.technology_stack)
+            baseBlueprint.technology_stack = ollamaData.technology_stack;
+          if (ollamaData.database_design)
+            baseBlueprint.database_design = ollamaData.database_design;
+          if (ollamaData.api_design)
+            baseBlueprint.api_design = ollamaData.api_design;
+          if (ollamaData.roadmap) baseBlueprint.roadmap = ollamaData.roadmap;
+
+          currentStore.blueprints = currentStore.blueprints || {};
+          currentStore.blueprints[id] = baseBlueprint;
+          p.status = "COMPLETED";
+          save(currentStore);
+        })
+        .catch((err) => {
+          console.error("LLM Generation Error:", err);
+          const currentStore = read();
+          const p = find(currentStore, id);
+          p.status = "FAILED";
+          save(currentStore);
+        });
 
       return validate(analysisSchema, {
         project_id: id,
@@ -229,7 +247,7 @@ export function createMockApi(
       const project = await api.getProject(id, signal);
       if (project.status !== "COMPLETED")
         throw new ApiError("No blueprint has been generated yet.", 404);
-        
+
       const store = read();
       if (store.blueprints && store.blueprints[id]) {
         return validate(blueprintSchema, store.blueprints[id]);

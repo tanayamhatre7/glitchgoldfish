@@ -190,8 +190,12 @@ export function ArtifactSection({
           <div className="arch-flow">
             <h4>Data Flow & Relationships</h4>
             <ul>
-              {(value.relationships as string[])?.map((r, i) => <li key={`r-${i}`}>{r}</li>)}
-              {(value.data_flow as string[])?.map((f, i) => <li key={`f-${i}`}>{f}</li>)}
+              {(value.relationships as string[])?.map((r, i) => (
+                <li key={`r-${i}`}>{r}</li>
+              ))}
+              {(value.data_flow as string[])?.map((f, i) => (
+                <li key={`f-${i}`}>{f}</li>
+              ))}
             </ul>
           </div>
         </div>
@@ -209,42 +213,92 @@ export function ArtifactSection({
           {(value.phases as any[])?.map((p, i) => {
             const isActive = activePhase === i;
             return (
-              <div 
-                className={`roadmap-phase ${isActive ? 'active' : ''}`} 
+              <div
+                className={`roadmap-phase ${isActive ? "active" : ""}`}
                 key={i}
                 onClick={() => setActivePhase(isActive ? null : i)}
               >
-                <div className={`phase-marker ${isActive ? 'active-marker' : ''}`}>{i + 1}</div>
+                <div
+                  className={`phase-marker ${isActive ? "active-marker" : ""}`}
+                >
+                  {i + 1}
+                </div>
                 <div className="phase-content">
-                  <h3 style={{ margin: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
                     <span>{p.name}</span>
-                    <span className="phase-duration" style={{ fontSize: '13px' }}>
-                      {isActive ? 'Click to close' : (p.duration || p.estimated_duration || 'View details')}
+                    <span
+                      className="phase-duration"
+                      style={{ fontSize: "13px" }}
+                    >
+                      {isActive
+                        ? "Click to close"
+                        : p.duration || p.estimated_duration || "View details"}
                     </span>
                   </h3>
-                  
-                  <div className="phase-details" style={{
-                    maxHeight: isActive ? '800px' : '0',
-                    opacity: isActive ? 1 : 0,
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease-in-out',
-                    marginTop: isActive ? '16px' : '0'
-                  }}>
+
+                  <div
+                    className="phase-details"
+                    style={{
+                      maxHeight: isActive ? "800px" : "0",
+                      opacity: isActive ? 1 : 0,
+                      overflow: "hidden",
+                      transition: "all 0.3s ease-in-out",
+                      marginTop: isActive ? "16px" : "0",
+                    }}
+                  >
                     {p.description ? (
-                      <p className="phase-description" style={{ fontSize: '15px', color: '#5a6b61', lineHeight: '1.6', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #e1e8e5' }}>
+                      <p
+                        className="phase-description"
+                        style={{
+                          fontSize: "15px",
+                          color: "#5a6b61",
+                          lineHeight: "1.6",
+                          marginBottom: "12px",
+                          paddingBottom: "12px",
+                          borderBottom: "1px solid #e1e8e5",
+                        }}
+                      >
                         {p.description}
                       </p>
                     ) : null}
-                    
-                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#5a6b61' }}>
-                      {(p.milestones || p.tasks || []).map((m: string, j: number) => (
-                        <li key={j} style={{ marginBottom: '8px', fontSize: '15px' }}>{m}</li>
-                      ))}
+
+                    <ul
+                      style={{
+                        margin: 0,
+                        paddingLeft: "20px",
+                        color: "#5a6b61",
+                      }}
+                    >
+                      {(p.milestones || p.tasks || []).map(
+                        (m: string, j: number) => (
+                          <li
+                            key={j}
+                            style={{ marginBottom: "8px", fontSize: "15px" }}
+                          >
+                            {m}
+                          </li>
+                        ),
+                      )}
                     </ul>
-                    
+
                     {!p.description && (
-                      <div style={{ marginTop: 12, fontSize: 13, color: '#909993', fontStyle: 'italic' }}>
-                        (Generate a new project to see detailed AI descriptions here)
+                      <div
+                        style={{
+                          marginTop: 12,
+                          fontSize: 13,
+                          color: "#909993",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        (Generate a new project to see detailed AI descriptions
+                        here)
                       </div>
                     )}
                   </div>
